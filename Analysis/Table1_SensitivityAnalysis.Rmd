@@ -1,0 +1,247 @@
+---
+title: "Table 1 Sensitivity Analysis"
+author: "John Schoof"
+date: "5/21/2020"
+output: html_document
+notes: test different cutpoints of exposure.
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+  if (Sys.getenv("USER") == "david") {
+    knitr::opts_knit$set(root.dir = "/Users/david/Desktop/Dave/school/Epi 514/Final Project/Analysis/")
+  }
+  
+  #Matt's system
+  if (Sys.getenv("USER") == "msgoldberg") {
+    knitr::opts_knit$set(root.dir = "/Users/msgoldberg/Desktop/Grad_School/Year_1/Q3/EPI514/SSB_Paper/")
+  }
+
+  if (Sys.getenv("USER") == "jscho") {
+    knitr::opts_knit$set(root.dir = "C:/Users/jscho/OneDrive - UW/SPRING 2020-LAPTOP-7K6NFTGB/EPI 514/")
+  }
+
+
+```
+
+
+
+
+```{r load_packages}
+
+library(tidyverse) #suite of packages for data cleaning and manipulation
+library(epiR) #basic epi tools including stratified analysis with Mantel Haenszel
+library(survey) #survey package to calculate survey sample weighted prevalence
+if (!require(sjPlot)) install.packages("sjPlot")
+library(sjPlot)
+if (!require(stargazer)) install.packages("stargazer")
+library(stargazer)
+if (!require(kableExtra)) install.packages("kableExtra")
+library(kableExtra)
+if (!require(htmlTable)) install.packages("htmlTable")
+library(htmlTable)
+library(dplyr)
+
+```
+
+
+
+
+```{r load_data}
+
+# Load Data
+#SSB_master <- readRDS("Data/SSB_master.Rds")
+load("Data/SSB_master.RData")
+glimpse(SSB_master)
+
+```
+
+
+
+
+```{r survey_weights}
+
+library("survey")
+  SSB_master <- subset( SSB_master , !is.na(final_weight))
+  design <- svydesign(data = SSB_master, 
+                      id = ~1, 
+                      strata  = ~ststr, 
+                      weights = ~final_weight, 
+                      nest = TRUE)
+  
+  #setting for how to deal with a psu with a single observation
+  options(survey.lonely.psu = "adjust") 
+
+```
+
+
+
+```{r}
+
+#N table
+(n_table <- table(SSB_master$ssb_cat1, useNA = "always"))
+
+# weighted proportion table
+n_svy <- svytable(~ssb_cat1, design = design)
+n_prop <- prop.table(n_svy)
+
+```
+
+
+
+
+```{r freq_tables}
+
+# AGE
+  
+  # frequency table
+  age_table <- table(SSB_master$age_cat, 
+                      SSB_master$ssb_cat1, 
+                      deparse.level = 2) # No NAs
+  
+  # weighted proportion table
+  age_svy <- svytable(~age_cat + ssb_cat1, design = design)
+  age_prop <- prop.table(age_svy, 2)
+  
+
+# SEX
+  
+  # frequency table
+  sex_table <- table(SSB_master$sex_01, 
+                      SSB_master$ssb_cat1, 
+                      deparse.level = 2) # No NAs
+  
+  # weighted proportion table
+  sex_svy <- svytable(~sex_01 + ssb_cat1, design = design)
+  sex_prop <- prop.table(sex_svy, 2)
+  
+
+# EDUCATION
+  
+  # frequency table
+  education_table <- table(SSB_master$education, 
+                            SSB_master$ssb_cat1, 
+                            deparse.level = 2) # Less than 5% NA
+  
+  # weighted proportion table
+  education_svy <- svytable(~education + ssb_cat1, design = design)
+  education_prop <- prop.table(education_svy, 2)
+
+  
+# INCOME
+  
+  # frequency table
+  #(income_table <- table(SSB_master$income_cat, 
+  #                       SSB_master$ssb_cat, 
+  #                       deparse.level = 2, useNA = "always"))
+  #
+  # weighted proportion table
+  #income_svy <- svytable(~income_cat + ssb_cat, design = design)
+  #prop.table(income_svy, 2)
+  
+
+# EXERCISE
+  
+  # frequency table
+  exercise_table <- table(SSB_master$exercise_01, 
+                           SSB_master$ssb_cat1, 
+                           deparse.level = 2) # Less than 5% NA
+  
+  # weighted proportion table
+  exercise_svy <- svytable(~exercise_01 + ssb_cat1, design = design)
+  exercise_prop <- prop.table(exercise_svy, 2)
+
+# MENTAL HEALTH
+  
+  # frequency table
+  mental_table <- table(SSB_master$mental, 
+                         SSB_master$ssb_cat1, 
+                         deparse.level = 2) # Less than 5% NA
+  
+  # weighted proportion table
+  mental_svy <- svytable(~mental + ssb_cat1, design = design)
+  mental_prop <- prop.table(mental_svy, 2)
+
+# DIABETES
+  
+  # frequency table
+  diabetes_table <- table(SSB_master$diabetes_01, 
+                           SSB_master$ssb_cat1, 
+                           deparse.level = 2) # Less than 5% NA
+  
+  # weighted proportion table
+  diabetes_svy <- svytable(~diabetes_01 + ssb_cat1, design = design)
+  diabetes_prop <- prop.table(diabetes_svy, 2)
+  
+
+# SMOKING
+  
+  # frequency table
+  smoking_table <- table(SSB_master$smoking_01, 
+                          SSB_master$ssb_cat1, 
+                          deparse.level = 2) # Less than 5% NA
+  
+  # weighted proportion table
+  smoking_svy <- svytable(~smoking_01 + ssb_cat1, design = design)
+  smoking_prop <- prop.table(smoking_svy, 2)
+
+# BMI
+  
+  # frequency table
+  bmi_table <- table(SSB_master$bmi_cat, 
+                      SSB_master$ssb_cat1, 
+                      deparse.level = 2, useNA = "always") 
+                      # <1 category missing more than 5%
+  
+  # weighted proportion table
+  bmi_svy <- svytable(~bmi_cat + ssb_cat1, design = design)
+  bmi_prop <- prop.table(bmi_svy, 2)
+
+# ALCOHOL
+  
+  # frequency table
+  # (alcohol_table <- table(SSB_master$alcohol_cat, 
+  #                        SSB_master$ssb_cat, 
+  #                        deparse.level = 2, useNA = "always"))
+  
+  # weighted proportion table
+  #alcohol_svy <- svytable(~alcohol_cat + ssb_cat, design = design)
+  #prop.table(alcohol_svy, 2)
+
+
+
+```
+
+
+
+```{r table}
+
+tables <- rbind(age_prop, sex_prop, education_prop, exercise_prop, mental_prop, diabetes_prop, smoking_prop, bmi_prop)
+
+#changing into percentage
+tables <- round(tables, 2)
+tables <- tables*100
+tables[,1:3] <- paste(tables[,1:3], "%", sep="") 
+
+glimpse(subset(SSB_master, ssb_cat1=="<1 SSB per Day"))  #43,334 observations
+glimpse(subset(SSB_master, ssb_cat1=="[1-2) SSB per Day"))  #7,193 observations
+glimpse(subset(SSB_master, ssb_cat1=="2+ SSB per Day"))  #7,064 observations
+
+
+
+# name <- data.frame(Model = c("Age", "18-24", "25-34", "35-44", "45-54", "55-64", "65+", "Sex", "Male", "Female", "Education", "Did not graduate HS", "HS graduate", "Some college", "College graduate", "Exercise", "Exercised in the past 30 days", "No exercise in the past 30 days", "Poor Mental Health Days", "Less than 14", "14 or more", "Diabetes", "No", "Yes", "Current Smoking Status", "Non-smoker", "Smoker", "BMI", "Less than 25", "25-29.9", "30 or higher"))
+
+
+table1 <- stargazer(tables, summary=FALSE, rownames=TRUE, type="html", 
+              title = "Table 1. Descriptive statistics of sample by average daily SSB consumption.(n = 85,760)",
+              align=TRUE,
+              style="ajs",
+              out="Table1JS.doc")
+
+
+```
+
+
+
+
+
