@@ -79,10 +79,10 @@ library("survey")
 ```{r}
 
 #N table
-(n_table <- table(SSB_master$ssb_cat1, useNA = "always"))
+(n_table <- table(SSB_master$ssb_cat2, useNA = "always"))
 
 # weighted proportion table
-n_svy <- svytable(~ssb_cat1, design = design)
+n_svy <- svytable(~ssb_cat2, design = design)
 n_prop <- prop.table(n_svy)
 
 ```
@@ -96,11 +96,11 @@ n_prop <- prop.table(n_svy)
   
   # frequency table
   age_table <- table(SSB_master$age_cat, 
-                      SSB_master$ssb_cat1, 
+                      SSB_master$ssb_cat2, 
                       deparse.level = 2) # No NAs
   
   # weighted proportion table
-  age_svy <- svytable(~age_cat + ssb_cat1, design = design)
+  age_svy <- svytable(~age_cat + ssb_cat2, design = design)
   age_prop <- prop.table(age_svy, 2)
   
 
@@ -108,11 +108,11 @@ n_prop <- prop.table(n_svy)
   
   # frequency table
   sex_table <- table(SSB_master$sex_01, 
-                      SSB_master$ssb_cat1, 
+                      SSB_master$ssb_cat2, 
                       deparse.level = 2) # No NAs
   
   # weighted proportion table
-  sex_svy <- svytable(~sex_01 + ssb_cat1, design = design)
+  sex_svy <- svytable(~sex_01 + ssb_cat2, design = design)
   sex_prop <- prop.table(sex_svy, 2)
   
 
@@ -120,11 +120,11 @@ n_prop <- prop.table(n_svy)
   
   # frequency table
   education_table <- table(SSB_master$education, 
-                            SSB_master$ssb_cat1, 
+                            SSB_master$ssb_cat2, 
                             deparse.level = 2) # Less than 5% NA
   
   # weighted proportion table
-  education_svy <- svytable(~education + ssb_cat1, design = design)
+  education_svy <- svytable(~education + ssb_cat2, design = design)
   education_prop <- prop.table(education_svy, 2)
 
   
@@ -144,33 +144,33 @@ n_prop <- prop.table(n_svy)
   
   # frequency table
   exercise_table <- table(SSB_master$exercise_01, 
-                           SSB_master$ssb_cat1, 
+                           SSB_master$ssb_cat2, 
                            deparse.level = 2) # Less than 5% NA
   
   # weighted proportion table
-  exercise_svy <- svytable(~exercise_01 + ssb_cat1, design = design)
+  exercise_svy <- svytable(~exercise_01 + ssb_cat2, design = design)
   exercise_prop <- prop.table(exercise_svy, 2)
 
 # MENTAL HEALTH
   
   # frequency table
   mental_table <- table(SSB_master$mental, 
-                         SSB_master$ssb_cat1, 
+                         SSB_master$ssb_cat2, 
                          deparse.level = 2) # Less than 5% NA
   
   # weighted proportion table
-  mental_svy <- svytable(~mental + ssb_cat1, design = design)
+  mental_svy <- svytable(~mental + ssb_cat2, design = design)
   mental_prop <- prop.table(mental_svy, 2)
 
 # DIABETES
   
   # frequency table
   diabetes_table <- table(SSB_master$diabetes_01, 
-                           SSB_master$ssb_cat1, 
+                           SSB_master$ssb_cat2, 
                            deparse.level = 2) # Less than 5% NA
   
   # weighted proportion table
-  diabetes_svy <- svytable(~diabetes_01 + ssb_cat1, design = design)
+  diabetes_svy <- svytable(~diabetes_01 + ssb_cat2, design = design)
   diabetes_prop <- prop.table(diabetes_svy, 2)
   
 
@@ -178,23 +178,23 @@ n_prop <- prop.table(n_svy)
   
   # frequency table
   smoking_table <- table(SSB_master$smoking_01, 
-                          SSB_master$ssb_cat1, 
+                          SSB_master$ssb_cat2, 
                           deparse.level = 2) # Less than 5% NA
   
   # weighted proportion table
-  smoking_svy <- svytable(~smoking_01 + ssb_cat1, design = design)
+  smoking_svy <- svytable(~smoking_01 + ssb_cat2, design = design)
   smoking_prop <- prop.table(smoking_svy, 2)
 
 # BMI
   
   # frequency table
   bmi_table <- table(SSB_master$bmi_cat, 
-                      SSB_master$ssb_cat1, 
+                      SSB_master$ssb_cat2, 
                       deparse.level = 2, useNA = "always") 
                       # <1 category missing more than 5%
   
   # weighted proportion table
-  bmi_svy <- svytable(~bmi_cat + ssb_cat1, design = design)
+  bmi_svy <- svytable(~bmi_cat + ssb_cat2, design = design)
   bmi_prop <- prop.table(bmi_svy, 2)
 
 # ALCOHOL
@@ -223,9 +223,9 @@ tables <- round(tables, 2)
 tables <- tables*100
 tables[,1:3] <- paste(tables[,1:3], "%", sep="") 
 
-glimpse(subset(SSB_master, ssb_cat1=="<1 SSB per Day"))  #43,334 observations
-glimpse(subset(SSB_master, ssb_cat1=="[1-2) SSB per Day"))  #7,193 observations
-glimpse(subset(SSB_master, ssb_cat1=="2+ SSB per Day"))  #7,064 observations
+glimpse(subset(SSB_master, ssb_cat2=="0 SSB per Day"))  # 19,697 observations
+glimpse(subset(SSB_master, ssb_cat2=="(0-1) SSB per Day"))  # 23,637 observations
+glimpse(subset(SSB_master, ssb_cat2=="1+ SSB per Day"))  # 14,257 observations
 
 
 
@@ -236,7 +236,7 @@ table1 <- stargazer(tables, summary=FALSE, rownames=TRUE, type="html",
               title = "Table 1. Descriptive statistics of sample by average daily SSB consumption.(n = 85,760)",
               align=TRUE,
               style="ajs",
-              out="Table1JS.doc")
+              out="Table1_SensitivityAnalysis.doc")
 
 
 ```
