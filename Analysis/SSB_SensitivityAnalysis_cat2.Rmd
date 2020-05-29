@@ -50,8 +50,8 @@ library(dplyr)
 #data <- read_csv("Data/SSB_master.csv")
 
 # For R data file
-load("Data/SSB_master.RData")
-data <- SSB_master
+  load("Data/SSB_master.RData")
+  data <- SSB_master
 
 ```
 
@@ -61,12 +61,12 @@ data <- SSB_master
 
 #DMC - why is there no cluster design in the weights?
 #creating survey weight object
-design <- svydesign(ids = ~1, 
-                    weights= ~final_weight,
-                    strata = ~ststr, 
-                    data=data)
-options(survey.lonely.psu = "adjust") #setting for how to deal with a psu with a single observation
-
+  design <- svydesign(ids = ~1, 
+                      weights= ~final_weight,
+                      strata = ~ststr, 
+                      data=data)
+  options(survey.lonely.psu = "adjust") #setting for how to deal with a psu with a single observation
+  
 
 ```
 
@@ -89,73 +89,85 @@ Variables:
 ```{r prepare_2X2}
 
 #setting up outcome in the correct format
-data$sleep_01 <- fct_relevel(data$sleep_01,
-                       "<7 Hours of Sleep", "7+ Hours of Sleep")
+  data$sleep_01 <- fct_relevel(data$sleep_01,
+                         "<7 Hours of Sleep", "7+ Hours of Sleep")
 
-data$ssb_cat1_low <- as.numeric(data$ssb_cat1)
-table(data$ssb_cat1_low)
-data$ssb_cat1_low[data$ssb_cat1_low==3] <- NA
+# Split exposure variable into 2 binary variables 
 
-data$ssb_cat1_low <- factor(data$ssb_cat1_low,
-                              levels=c(2,1),
-                              labels=c("[1-2) SSB per Day", "<1 SSB per Day"))
+  # Create binary exposure variable - (0-1) vs 0 (reference category)
+  data$ssb_cat2_low <- as.numeric(data$ssb_cat2)
+  table(data$ssb_cat2_low)
+  
+  data$ssb_cat2_low[data$ssb_cat2_low==3] <- NA
+  
+  data$ssb_cat2_low <- factor(data$ssb_cat2_low,
+                                levels=c(2,1),
+                                labels=c("(0-1) SSB per Day", "0 SSB per Day"))
+  
+  # Create binary exposure variable - (1+) vs 0 (reference category)
+  data$ssb_cat2_high <- as.numeric(data$ssb_cat2)
+  table(data$ssb_cat2_high)
+  
+  data$ssb_cat2_high[data$ssb_cat2_high==2] <- NA
+  
+  data$ssb_cat2_high <- factor(data$ssb_cat2_high,
+                                  levels=c(3,1),
+                                  labels=c("1+ SSB per Day", "0 SSB per Day"))
 
+  
+  #Check newly coded variables
+    with(data, table(ssb_cat2_low, ssb_cat2))
+    with(data, table(ssb_cat2_high, ssb_cat2))
+  #SSB tables coded correctly
+    
 
-data$ssb_cat1_high <- as.numeric(data$ssb_cat1)
-table(data$ssb_cat1_high)
-data$ssb_cat1_high[data$ssb_cat1_high==2] <- NA
-
-data$ssb_cat1_high <- factor(data$ssb_cat1_high,
-                                levels=c(3,1),
-                                labels=c("2+ SSB per Day", "<1 SSB per Day"))
-
-
-#Checking
-with(data, table(ssb_cat1_low, ssb_cat1))
-with(data, table(ssb_cat1_high, ssb_cat1))
-#SSB tables coded correctly
-
-#Checking sleep X ssb tables
-base_table_low <- with(data, table(ssb_cat1_low, sleep_01))
-base_table_low
-base_table_high <- with(data, table(ssb_cat1_high, sleep_01))
-base_table_high
-#Tables set up correctly
-
-#adjusting factor covariates into numeric
-data$age_cat <- as.numeric(data$age_cat)
-data$sex_01 <- as.numeric(data$sex_01)
-data$education <- as.numeric(data$education)
-data$exercise_01 <- as.numeric(data$exercise_01)
-data$mental <- as.numeric(data$mental)
-data$diabetes_01 <- as.numeric(data$diabetes_01)
-data$smoking_01 <- as.numeric(data$smoking_01)
-data$bmi_cat <- as.numeric(data$bmi_cat)
+  #Checking sleep X ssb tables
+    base_table_low <- with(data, table(ssb_cat2_low, sleep_01))
+    base_table_low
+    base_table_high <- with(data, table(ssb_cat2_high, sleep_01))
+    base_table_high
+  #Tables set up correctly
 
 
-#setting up covariates into tables
-adj_table_low <- with(data, table(ssb_cat1_low, sleep_01, age_cat+sex_01+education+exercise_01+mental+diabetes_01+smoking_01+bmi_cat))
-adj_table_high <- with(data, table(ssb_cat1_high, sleep_01, age_cat+sex_01+education+exercise_01+mental+diabetes_01+smoking_01+bmi_cat))
+  # Change factor covariates into numeric
+    data$age_cat <- as.numeric(data$age_cat)
+    data$sex_01 <- as.numeric(data$sex_01)
+    data$education <- as.numeric(data$education)
+    data$exercise_01 <- as.numeric(data$exercise_01)
+    data$mental <- as.numeric(data$mental)
+    data$diabetes_01 <- as.numeric(data$diabetes_01)
+    data$smoking_01 <- as.numeric(data$smoking_01)
+    data$bmi_cat <- as.numeric(data$bmi_cat)
 
-adj_table_low <- with(data, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01+diabetes_01+smoking_01+bmi_cat))
-#adding mental and BMI changes the crude PR - why is this?
+
+  # Setting up covariates into tables
+    adj_table_low <- with(data, table(ssb_cat2_low, sleep_01,
+                          age_cat+sex_01+education+exercise_01+mental+diabetes_01+smoking_01+bmi_cat))
+    
+    adj_table_high <- with(data, table(ssb_cat2_high, sleep_01, 
+                          age_cat+sex_01+education+exercise_01+mental+diabetes_01+smoking_01+bmi_cat))
+    
+    adj_table_low <- with(data, table(ssb_cat2_low, sleep_01, 
+                          age_cat+sex_01+exercise_01+diabetes_01+smoking_01+bmi_cat))
+  #adding mental and BMI changes the crude PR - why is this?
+
 
 ```
 
 
 ```{r M-H_analysis}
 
-#unadjusted low PR
-low_base <- epi.2by2(base_table_low, method="cross.sectional")
-
-#unadjusted high PR
-high_base <- epi.2by2(base_table_high, method="cross.sectional")
-
-#adjusted low PR
-low_adj <- epi.2by2(adj_table_low, method="cross.sectional")
-
-#adjusted high PR
-high_adj <- epi.2by2(adj_table_high, method="cross.sectional")
+  #unadjusted low PR
+    (low_base <- epi.2by2(base_table_low, method="cross.sectional"))
+  
+  #unadjusted high PR
+    (high_base <- epi.2by2(base_table_high, method="cross.sectional"))
+  
+  #adjusted low PR
+    (low_adj <- epi.2by2(adj_table_low, method="cross.sectional"))
+  
+  #adjusted high PR
+    high_adj <- epi.2by2(adj_table_high, method="cross.sectional")
 
 
 ```
@@ -163,14 +175,14 @@ high_adj <- epi.2by2(adj_table_high, method="cross.sectional")
 
 ```{r stratified_mh}
 
-#setting up education stratified variables
-#subsetting data
-no_hs <- subset(data, data$education==1)
-hs <- subset(data, data$education==2)
-some_coll <- subset(data, data$education==3)
-coll <- subset(data, data$education==4)
+# Set up education stratified variables
+  # Subset data
+  no_hs <- subset(data, data$education==1)
+  hs <- subset(data, data$education==2)
+  some_coll <- subset(data, data$education==3)
+  coll <- subset(data, data$education==4)
 
-# #Not enough observations to fill each stratified table - need to combine some together
+# Not enough observations to fill each stratified table - need to combine some together
 # with(no_hs, table(ssb_cat1_high, sleep_01))
 # with(no_hs, table(ssb_cat1_high, sleep_01, age_cat))
 # with(no_hs, table(ssb_cat1_high, sleep_01, sex_01))
@@ -181,18 +193,19 @@ coll <- subset(data, data$education==4)
 # with(no_hs, table(ssb_cat1_high, sleep_01, bmi_cat))
 # 
 
-#setting up tables - two for each education level and remove education from covariate list
-no_hs_table_low <- with(no_hs, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
-no_hs_table_high <- with(no_hs, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
-
-hs_table_low <- with(hs, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
-hs_table_high <- with(hs, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
-
-some_coll_table_low <- with(some_coll, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
-some_coll_table_high <- with(some_coll, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
-
-coll_table_low <- with(coll, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
-coll_table_high <- with(coll, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+# Set up tables - two for each education level and remove education from covariate list
+  no_hs_table_low <- with(no_hs, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
+  no_hs_table_high <- with(no_hs, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+  
+  hs_table_low <- with(hs, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
+  hs_table_high <- with(hs, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+  
+  some_coll_table_low <- with(some_coll, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
+  some_coll_table_high <- with(some_coll, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+  
+  coll_table_low <- with(coll, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
+  coll_table_high <- with(coll, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+  
 
 ```
 
@@ -200,18 +213,18 @@ coll_table_high <- with(coll, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exer
 
 ```{r M-H_analysis_education}
 
-
-low_no_hs <- epi.2by2(no_hs_table_low, method="cross.sectional")
-high_no_hs <- epi.2by2(no_hs_table_high, method="cross.sectional")
-
-low_hs <- epi.2by2(hs_table_low, method="cross.sectional")
-high_hs <- epi.2by2(hs_table_high, method="cross.sectional")
-
-low_some_coll <- epi.2by2(some_coll_table_low, method="cross.sectional")
-high_some_coll <- epi.2by2(some_coll_table_high, method="cross.sectional")
-
-low_coll <- epi.2by2(coll_table_low, method="cross.sectional")
-high_coll <- epi.2by2(coll_table_high, method="cross.sectional")
+  
+  low_no_hs <- epi.2by2(no_hs_table_low, method="cross.sectional")
+  high_no_hs <- epi.2by2(no_hs_table_high, method="cross.sectional")
+  
+  low_hs <- epi.2by2(hs_table_low, method="cross.sectional")
+  high_hs <- epi.2by2(hs_table_high, method="cross.sectional")
+  
+  low_some_coll <- epi.2by2(some_coll_table_low, method="cross.sectional")
+  high_some_coll <- epi.2by2(some_coll_table_high, method="cross.sectional")
+  
+  low_coll <- epi.2by2(coll_table_low, method="cross.sectional")
+  high_coll <- epi.2by2(coll_table_high, method="cross.sectional")
 
 
 ```
