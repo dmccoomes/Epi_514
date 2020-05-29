@@ -1,0 +1,545 @@
+---
+title: "SSB_Sensitivty_Analysis_cat2"
+author: "John Schoof"
+date: "5/29/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+  if (Sys.getenv("USER") == "david") {
+    knitr::opts_knit$set(root.dir = "/Users/david/Desktop/Dave/school/Epi 514/Final Project/Analysis/")
+  }
+  
+  #Matt's system
+  if (Sys.getenv("USER") == "msgoldberg") {
+    knitr::opts_knit$set(root.dir = "/Users/msgoldberg/Desktop/Grad_School/Year_1/Q3/EPI514/SSB_Paper/")
+  }
+
+  if (Sys.getenv("USER") == "jscho") {
+    knitr::opts_knit$set(root.dir = "C:/Users/jscho/OneDrive - UW/SPRING 2020-LAPTOP-7K6NFTGB/EPI 514/")
+  }
+
+
+```
+
+
+
+```{r load_packages}
+
+library(tidyverse) #suite of packages for data cleaning and manipulation
+library(epiR) #basic epi tools including stratified analysis with Mantel Haenszel
+library(survey) #survey package to calculate survey sample weighted prevalence
+if (!require(sjPlot)) install.packages("sjPlot")
+library(sjPlot)
+if (!require(stargazer)) install.packages("stargazer")
+library(stargazer)
+if (!require(kableExtra)) install.packages("kableExtra")
+library(kableExtra)
+if (!require(htmlTable)) install.packages("htmlTable")
+library(htmlTable)
+library(dplyr)
+```
+
+
+
+```{r load_data}
+
+# If you want the CSV choose this option
+#data <- read_csv("Data/SSB_master.csv")
+
+# For R data file
+load("Data/SSB_master.RData")
+data <- SSB_master
+
+```
+
+
+
+```{r survey_weights}
+
+#DMC - why is there no cluster design in the weights?
+#creating survey weight object
+design <- svydesign(ids = ~1, 
+                    weights= ~final_weight,
+                    strata = ~ststr, 
+                    data=data)
+options(survey.lonely.psu = "adjust") #setting for how to deal with a psu with a single observation
+
+
+```
+
+
+Variables:
+  outcome: sleep
+  exposure: SSB consumption
+  covariates: age, sex, education, exercise, mental health, diabetes, smoking status, bmi
+
+2X2 setup
+### ----------- ---------- ---------- ----------
+### Disease + Disease - Total
+### ----------- ---------- ---------- ----------
+### Expose + a b a+b
+### Expose - c d c+d
+### ----------- ---------- ---------- ----------
+### Total a+c b+d a+b+c+d
+### ----------- ---------- ---------- ----------*
+
+```{r prepare_2X2}
+
+#setting up outcome in the correct format
+data$sleep_01 <- fct_relevel(data$sleep_01,
+                       "<7 Hours of Sleep", "7+ Hours of Sleep")
+
+data$ssb_cat1_low <- as.numeric(data$ssb_cat1)
+table(data$ssb_cat1_low)
+data$ssb_cat1_low[data$ssb_cat1_low==3] <- NA
+
+data$ssb_cat1_low <- factor(data$ssb_cat1_low,
+                              levels=c(2,1),
+                              labels=c("[1-2) SSB per Day", "<1 SSB per Day"))
+
+
+data$ssb_cat1_high <- as.numeric(data$ssb_cat1)
+table(data$ssb_cat1_high)
+data$ssb_cat1_high[data$ssb_cat1_high==2] <- NA
+
+data$ssb_cat1_high <- factor(data$ssb_cat1_high,
+                                levels=c(3,1),
+                                labels=c("2+ SSB per Day", "<1 SSB per Day"))
+
+
+#Checking
+with(data, table(ssb_cat1_low, ssb_cat1))
+with(data, table(ssb_cat1_high, ssb_cat1))
+#SSB tables coded correctly
+
+#Checking sleep X ssb tables
+base_table_low <- with(data, table(ssb_cat1_low, sleep_01))
+base_table_low
+base_table_high <- with(data, table(ssb_cat1_high, sleep_01))
+base_table_high
+#Tables set up correctly
+
+#adjusting factor covariates into numeric
+data$age_cat <- as.numeric(data$age_cat)
+data$sex_01 <- as.numeric(data$sex_01)
+data$education <- as.numeric(data$education)
+data$exercise_01 <- as.numeric(data$exercise_01)
+data$mental <- as.numeric(data$mental)
+data$diabetes_01 <- as.numeric(data$diabetes_01)
+data$smoking_01 <- as.numeric(data$smoking_01)
+data$bmi_cat <- as.numeric(data$bmi_cat)
+
+
+#setting up covariates into tables
+adj_table_low <- with(data, table(ssb_cat1_low, sleep_01, age_cat+sex_01+education+exercise_01+mental+diabetes_01+smoking_01+bmi_cat))
+adj_table_high <- with(data, table(ssb_cat1_high, sleep_01, age_cat+sex_01+education+exercise_01+mental+diabetes_01+smoking_01+bmi_cat))
+
+adj_table_low <- with(data, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01+diabetes_01+smoking_01+bmi_cat))
+#adding mental and BMI changes the crude PR - why is this?
+
+```
+
+
+```{r M-H_analysis}
+
+#unadjusted low PR
+low_base <- epi.2by2(base_table_low, method="cross.sectional")
+
+#unadjusted high PR
+high_base <- epi.2by2(base_table_high, method="cross.sectional")
+
+#adjusted low PR
+low_adj <- epi.2by2(adj_table_low, method="cross.sectional")
+
+#adjusted high PR
+high_adj <- epi.2by2(adj_table_high, method="cross.sectional")
+
+
+```
+
+
+```{r stratified_mh}
+
+#setting up education stratified variables
+#subsetting data
+no_hs <- subset(data, data$education==1)
+hs <- subset(data, data$education==2)
+some_coll <- subset(data, data$education==3)
+coll <- subset(data, data$education==4)
+
+# #Not enough observations to fill each stratified table - need to combine some together
+# with(no_hs, table(ssb_cat1_high, sleep_01))
+# with(no_hs, table(ssb_cat1_high, sleep_01, age_cat))
+# with(no_hs, table(ssb_cat1_high, sleep_01, sex_01))
+# with(no_hs, table(ssb_cat1_high, sleep_01, exercise_01))
+# with(no_hs, table(ssb_cat1_high, sleep_01, mental))
+# with(no_hs, table(ssb_cat1_high, sleep_01, diabetes_01))
+# with(no_hs, table(ssb_cat1_high, sleep_01, smoking_01))
+# with(no_hs, table(ssb_cat1_high, sleep_01, bmi_cat))
+# 
+
+#setting up tables - two for each education level and remove education from covariate list
+no_hs_table_low <- with(no_hs, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
+no_hs_table_high <- with(no_hs, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+
+hs_table_low <- with(hs, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
+hs_table_high <- with(hs, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+
+some_coll_table_low <- with(some_coll, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
+some_coll_table_high <- with(some_coll, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+
+coll_table_low <- with(coll, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
+coll_table_high <- with(coll, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+
+```
+
+
+
+```{r M-H_analysis_education}
+
+
+low_no_hs <- epi.2by2(no_hs_table_low, method="cross.sectional")
+high_no_hs <- epi.2by2(no_hs_table_high, method="cross.sectional")
+
+low_hs <- epi.2by2(hs_table_low, method="cross.sectional")
+high_hs <- epi.2by2(hs_table_high, method="cross.sectional")
+
+low_some_coll <- epi.2by2(some_coll_table_low, method="cross.sectional")
+high_some_coll <- epi.2by2(some_coll_table_high, method="cross.sectional")
+
+low_coll <- epi.2by2(coll_table_low, method="cross.sectional")
+high_coll <- epi.2by2(coll_table_high, method="cross.sectional")
+
+
+```
+
+
+
+```{r stratify_age}
+
+#setting up education stratified variables
+#subsetting data
+age_18_24 <- subset(data, data$age==1)
+age_25_34 <- subset(data, data$age==2)
+age_35_44 <- subset(data, data$age==3)
+age_45_54 <- subset(data, data$age==4)
+age_55_64 <- subset(data, data$age==5)
+age_65 <- subset(data, data$age==6)
+
+
+#setting up tables - two for each education level and remove education from covariate list
+age_18_24_low <- with(age_18_24, table(ssb_cat1_low, sleep_01, sex_01+education+exercise_01))
+age_18_24_high <- with(age_18_24, table(ssb_cat1_high, sleep_01, sex_01+education+exercise_01))
+
+age_25_34_low <- with(age_25_34, table(ssb_cat1_low, sleep_01, sex_01+education+exercise_01))
+age_25_34_high <- with(age_25_34, table(ssb_cat1_high, sleep_01, sex_01+education+exercise_01))
+
+age_35_44_low <- with(age_35_44, table(ssb_cat1_low, sleep_01, sex_01+education+exercise_01))
+age_35_44_high <- with(age_35_44, table(ssb_cat1_high, sleep_01, sex_01+education+exercise_01))
+
+age_45_54_low <- with(age_45_54, table(ssb_cat1_low, sleep_01, sex_01+education+exercise_01))
+age_45_54_high <- with(age_45_54, table(ssb_cat1_high, sleep_01, sex_01+education+exercise_01))
+
+age_55_64_low <- with(age_55_64, table(ssb_cat1_low, sleep_01, sex_01+education+exercise_01))
+age_55_64_high <- with(age_55_64, table(ssb_cat1_high, sleep_01, sex_01+education+exercise_01))
+
+age_65_low <- with(age_65, table(ssb_cat1_low, sleep_01, sex_01+education+exercise_01))
+age_65_high <- with(age_65, table(ssb_cat1_high, sleep_01, sex_01+education+exercise_01))
+
+```
+
+
+
+```{r M-H_analysis_age}
+
+
+low_age_18_24 <- epi.2by2(age_18_24_low, method="cross.sectional")
+high_age_18_24 <- epi.2by2(age_18_24_high, method="cross.sectional")
+
+low_age_25_34 <- epi.2by2(age_25_34_low, method="cross.sectional")
+high_age_25_34 <- epi.2by2(age_25_34_high, method="cross.sectional")
+
+low_age_35_44 <- epi.2by2(age_35_44_low, method="cross.sectional")
+high_age_35_44 <- epi.2by2(age_35_44_high, method="cross.sectional")
+
+low_age_45_54 <- epi.2by2(age_45_54_low, method="cross.sectional")
+high_age_45_54 <- epi.2by2(age_45_54_high, method="cross.sectional")
+
+low_age_55_64 <- epi.2by2(age_55_64_low, method="cross.sectional")
+high_age_55_64 <- epi.2by2(age_55_64_high, method="cross.sectional")
+
+low_age_65 <- epi.2by2(age_65_low, method="cross.sectional")
+high_age_65 <- epi.2by2(age_65_high, method="cross.sectional")
+
+
+```
+
+
+
+
+```{r table}
+
+
+
+#putting estimates into a table
+#starting with unadjusted and adjusted
+unadj_1_2 <- format(round(low_base$massoc$PR.strata.wald, 2), nsmall=2)
+unadj_1_2 <- unadj_1_2 %>% unite(ci, 2, 3, sep="-")
+unadj_1_2 <- unadj_1_2 %>% unite(est, 1, 2, sep=" (")
+unadj_1_2 <- paste(unadj_1_2$est, ")", sep="")
+
+unadj_2 <- format(round(high_base$massoc$PR.strata.wald, 2), nsmall=2)
+unadj_2 <- unadj_2 %>% unite(ci, 2, 3, sep="-")
+unadj_2 <- unadj_2 %>% unite(est, 1, 2, sep=" (")
+unadj_2 <- paste(unadj_2$est, ")", sep="")
+
+adj_1_2 <- format(round(low_adj$massoc$PR.mh.wald, 2), nsmall=2)
+adj_1_2 <- adj_1_2 %>% unite(ci, 2, 3, sep="-")
+adj_1_2 <- adj_1_2 %>% unite(est, 1, 2, sep=" (")
+adj_1_2 <- paste(adj_1_2$est, ")", sep="")
+
+adj_2 <- format(round(high_adj$massoc$PR.mh.wald, 2), nsmall=2)
+adj_2 <- adj_2 %>% unite(ci, 2, 3, sep="-")
+adj_2 <- adj_2 %>% unite(est, 1, 2, sep=" (")
+adj_2 <- paste(adj_2$est, ")", sep="")
+
+unadj <- data.frame(unadj_1_2, unadj_2)
+unadj <- unadj %>%
+  rename(
+    "[1-2) SSB"=unadj_1_2,
+    ">2 SSB"=unadj_2
+  )
+adj <- data.frame(adj_1_2, adj_2)
+adj <- adj %>% 
+  rename(
+    "[1-2) SSB"=adj_1_2,
+    ">2 SSB"=adj_2
+  )
+
+
+mh_table <- rbind(unadj, adj)
+
+
+#Now including stratified by education
+#no HS
+no_hs_1_2 <- format(round(low_no_hs$massoc$PR.mh.wald, 2), nsmall=2)
+no_hs_1_2 <- no_hs_1_2 %>% unite(ci, 2, 3, sep="-")
+no_hs_1_2 <- no_hs_1_2 %>% unite(est, 1, 2, sep=" (")
+no_hs_1_2 <- paste(no_hs_1_2$est, ")", sep="")
+
+no_hs_2 <- format(round(high_no_hs$massoc$PR.mh.wald, 2), nsmall=2)
+no_hs_2 <- no_hs_2 %>% unite(ci, 2, 3, sep="-")
+no_hs_2 <- no_hs_2 %>% unite(est, 1, 2, sep=" (")
+no_hs_2 <- paste(no_hs_2$est, ")", sep="")
+
+no_hs <- data.frame(no_hs_1_2, no_hs_2)
+no_hs <- no_hs %>%
+  rename(
+    "[1-2) SSB"=no_hs_1_2,
+    ">2 SSB"=no_hs_2
+  )
+
+#HS
+hs_1_2 <- format(round(low_hs$massoc$PR.mh.wald, 2), nsmall=2)
+hs_1_2 <- hs_1_2 %>% unite(ci, 2, 3, sep="-")
+hs_1_2 <- hs_1_2 %>% unite(est, 1, 2, sep=" (")
+hs_1_2 <- paste(hs_1_2$est, ")", sep="")
+
+hs_2 <- format(round(high_hs$massoc$PR.mh.wald, 2), nsmall=2)
+hs_2 <- hs_2 %>% unite(ci, 2, 3, sep="-")
+hs_2 <- hs_2 %>% unite(est, 1, 2, sep=" (")
+hs_2 <- paste(hs_2$est, ")", sep="")
+
+hs <- data.frame(hs_1_2, hs_2)
+hs <- hs %>%
+  rename(
+    "[1-2) SSB"=hs_1_2,
+    ">2 SSB"=hs_2
+  )
+
+#some college
+some_coll_1_2 <- format(round(low_some_coll$massoc$PR.mh.wald, 2), nsmall=2)
+some_coll_1_2 <- some_coll_1_2 %>% unite(ci, 2, 3, sep="-")
+some_coll_1_2 <- some_coll_1_2 %>% unite(est, 1, 2, sep=" (")
+some_coll_1_2 <- paste(some_coll_1_2$est, ")", sep="")
+
+some_coll_2 <- format(round(high_some_coll$massoc$PR.mh.wald, 2), nsmall=2)
+some_coll_2 <- some_coll_2 %>% unite(ci, 2, 3, sep="-")
+some_coll_2 <- some_coll_2 %>% unite(est, 1, 2, sep=" (")
+some_coll_2 <- paste(some_coll_2$est, ")", sep="")
+
+some_coll <- data.frame(some_coll_1_2, some_coll_2)
+some_coll <- some_coll %>%
+  rename(
+    "[1-2) SSB"=some_coll_1_2,
+    ">2 SSB"=some_coll_2
+  )
+
+
+#college grad
+coll_1_2 <- format(round(low_coll$massoc$PR.mh.wald, 2), nsmall=2)
+coll_1_2 <- coll_1_2 %>% unite(ci, 2, 3, sep="-")
+coll_1_2 <- coll_1_2 %>% unite(est, 1, 2, sep=" (")
+coll_1_2 <- paste(coll_1_2$est, ")", sep="")
+
+coll_2 <- format(round(high_coll$massoc$PR.mh.wald, 2), nsmall=2)
+coll_2 <- coll_2 %>% unite(ci, 2, 3, sep="-")
+coll_2 <- coll_2 %>% unite(est, 1, 2, sep=" (")
+coll_2 <- paste(coll_2$est, ")", sep="")
+
+coll <- data.frame(coll_1_2, coll_2)
+coll <- coll %>%
+  rename(
+    "[1-2) SSB"=coll_1_2,
+    ">2 SSB"=coll_2
+  )
+
+
+#Now including stratified by age
+#18-24
+age_18_24_1_2 <- format(round(low_age_18_24$massoc$PR.mh.wald, 2), nsmall=2)
+age_18_24_1_2 <- age_18_24_1_2 %>% unite(ci, 2, 3, sep="-")
+age_18_24_1_2 <- age_18_24_1_2 %>% unite(est, 1, 2, sep=" (")
+age_18_24_1_2 <- paste(age_18_24_1_2$est, ")", sep="")
+
+age_18_24_2 <- format(round(high_age_18_24$massoc$PR.mh.wald, 2), nsmall=2)
+age_18_24_2 <- age_18_24_2 %>% unite(ci, 2, 3, sep="-")
+age_18_24_2 <- age_18_24_2 %>% unite(est, 1, 2, sep=" (")
+age_18_24_2 <- paste(age_18_24_2$est, ")", sep="")
+
+age_18_24 <- data.frame(age_18_24_1_2, age_18_24_2)
+age_18_24 <- age_18_24 %>%
+  rename(
+    "[1-2) SSB"=age_18_24_1_2,
+    ">2 SSB"=age_18_24_2
+  )
+
+#25-34
+age_25_34_1_2 <- format(round(low_age_25_34$massoc$PR.mh.wald, 2), nsmall=2)
+age_25_34_1_2 <- age_25_34_1_2 %>% unite(ci, 2, 3, sep="-")
+age_25_34_1_2 <- age_25_34_1_2 %>% unite(est, 1, 2, sep=" (")
+age_25_34_1_2 <- paste(age_25_34_1_2$est, ")", sep="")
+
+age_25_34_2 <- format(round(high_age_25_34$massoc$PR.mh.wald, 2), nsmall=2)
+age_25_34_2 <- age_25_34_2 %>% unite(ci, 2, 3, sep="-")
+age_25_34_2 <- age_25_34_2 %>% unite(est, 1, 2, sep=" (")
+age_25_34_2 <- paste(age_25_34_2$est, ")", sep="")
+
+age_25_34 <- data.frame(age_25_34_1_2, age_25_34_2)
+age_25_34 <- age_25_34 %>%
+  rename(
+    "[1-2) SSB"=age_25_34_1_2,
+    ">2 SSB"=age_25_34_2
+  )
+
+
+#35-44
+age_35_44_1_2 <- format(round(low_age_35_44$massoc$PR.mh.wald, 2), nsmall=2)
+age_35_44_1_2 <- age_35_44_1_2 %>% unite(ci, 2, 3, sep="-")
+age_35_44_1_2 <- age_35_44_1_2 %>% unite(est, 1, 2, sep=" (")
+age_35_44_1_2 <- paste(age_35_44_1_2$est, ")", sep="")
+
+age_35_44_2 <- format(round(high_age_35_44$massoc$PR.mh.wald, 2), nsmall=2)
+age_35_44_2 <- age_35_44_2 %>% unite(ci, 2, 3, sep="-")
+age_35_44_2 <- age_35_44_2 %>% unite(est, 1, 2, sep=" (")
+age_35_44_2 <- paste(age_35_44_2$est, ")", sep="")
+
+age_35_44 <- data.frame(age_35_44_1_2, age_35_44_2)
+age_35_44 <- age_35_44 %>%
+  rename(
+    "[1-2) SSB"=age_35_44_1_2,
+    ">2 SSB"=age_35_44_2
+  )
+
+#45-54
+age_45_54_1_2 <- format(round(low_age_45_54$massoc$PR.mh.wald, 2), nsmall=2)
+age_45_54_1_2 <- age_45_54_1_2 %>% unite(ci, 2, 3, sep="-")
+age_45_54_1_2 <- age_45_54_1_2 %>% unite(est, 1, 2, sep=" (")
+age_45_54_1_2 <- paste(age_45_54_1_2$est, ")", sep="")
+
+age_45_54_2 <- format(round(high_age_45_54$massoc$PR.mh.wald, 2), nsmall=2)
+age_45_54_2 <- age_45_54_2 %>% unite(ci, 2, 3, sep="-")
+age_45_54_2 <- age_45_54_2 %>% unite(est, 1, 2, sep=" (")
+age_45_54_2 <- paste(age_45_54_2$est, ")", sep="")
+
+age_45_54 <- data.frame(age_45_54_1_2, age_45_54_2)
+age_45_54 <- age_45_54 %>%
+  rename(
+    "[1-2) SSB"=age_45_54_1_2,
+    ">2 SSB"=age_45_54_2
+  )
+
+#55-64
+age_55_64_1_2 <- format(round(low_age_55_64$massoc$PR.mh.wald, 2), nsmall=2)
+age_55_64_1_2 <- age_55_64_1_2 %>% unite(ci, 2, 3, sep="-")
+age_55_64_1_2 <- age_55_64_1_2 %>% unite(est, 1, 2, sep=" (")
+age_55_64_1_2 <- paste(age_55_64_1_2$est, ")", sep="")
+
+age_55_64_2 <- format(round(high_age_55_64$massoc$PR.mh.wald, 2), nsmall=2)
+age_55_64_2 <- age_55_64_2 %>% unite(ci, 2, 3, sep="-")
+age_55_64_2 <- age_55_64_2 %>% unite(est, 1, 2, sep=" (")
+age_55_64_2 <- paste(age_55_64_2$est, ")", sep="")
+
+age_55_64 <- data.frame(age_55_64_1_2, age_55_64_2)
+age_55_64 <- age_55_64 %>%
+  rename(
+    "[1-2) SSB"=age_55_64_1_2,
+    ">2 SSB"=age_55_64_2
+  )
+
+#65+
+age_65_1_2 <- format(round(low_age_65$massoc$PR.mh.wald, 2), nsmall=2)
+age_65_1_2 <- age_65_1_2 %>% unite(ci, 2, 3, sep="-")
+age_65_1_2 <- age_65_1_2 %>% unite(est, 1, 2, sep=" (")
+age_65_1_2 <- paste(age_65_1_2$est, ")", sep="")
+
+age_65_2 <- format(round(high_age_65$massoc$PR.mh.wald, 2), nsmall=2)
+age_65_2 <- age_65_2 %>% unite(ci, 2, 3, sep="-")
+age_65_2 <- age_65_2 %>% unite(est, 1, 2, sep=" (")
+age_65_2 <- paste(age_65_2$est, ")", sep="")
+
+age_65 <- data.frame(age_65_1_2, age_65_2)
+age_65 <- age_65 %>%
+  rename(
+    "[1-2) SSB"=age_65_1_2,
+    ">2 SSB"=age_65_2
+  )
+
+
+
+#Putting the whole table together
+mh_table <- rbind(mh_table, no_hs, hs, some_coll, coll, age_18_24, age_25_34, age_35_44, age_45_54, age_55_64, age_65)
+
+
+ref <- data.frame(SSB = c("Ref"))
+ref <- ref %>%
+  rename(
+    "<1 SSB"=SSB
+  )
+
+name <- data.frame(Model = c("Unadjusted PR", "Adjusted PR", "No HS", "HS graduate", "Some college", "College graduate", "Age 18-24", "Age 25-34", "Age 35-44", "Age 45-54", "Age 55-64", "Age 65+"))
+
+mh_table <- cbind(name, ref, mh_table)
+
+```
+
+
+
+
+```{r table_output}
+
+table2 <- stargazer(mh_table, summary=FALSE, rownames=FALSE, type="html", 
+              title = "Table 2. Mantel-Haenszel Prevalence Ratios for the association between hours of sleep and number of SSBs per day",
+              add.lines = "Unadjusted PR",
+              align=TRUE,
+              style="ajs",
+              out="Table 2.doc")
+
+
+
+```
+
+
