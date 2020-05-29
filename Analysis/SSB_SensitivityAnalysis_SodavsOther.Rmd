@@ -1,0 +1,200 @@
+---
+title: "SSB_SensitivityAnalysis_SodavsOther"
+author: "John Schoof"
+date: "5/29/2020"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+  if (Sys.getenv("USER") == "david") {
+    knitr::opts_knit$set(root.dir = "/Users/david/Desktop/Dave/school/Epi 514/Final Project/Analysis/")
+  }
+  
+  #Matt's system
+  if (Sys.getenv("USER") == "msgoldberg") {
+    knitr::opts_knit$set(root.dir = "/Users/msgoldberg/Desktop/Grad_School/Year_1/Q3/EPI514/SSB_Paper/")
+  }
+
+  if (Sys.getenv("USER") == "jscho") {
+    knitr::opts_knit$set(root.dir = "C:/Users/jscho/OneDrive - UW/SPRING 2020-LAPTOP-7K6NFTGB/EPI 514/")
+  }
+
+
+```
+
+
+
+```{r load_packages}
+
+library(tidyverse) #suite of packages for data cleaning and manipulation
+library(epiR) #basic epi tools including stratified analysis with Mantel Haenszel
+library(survey) #survey package to calculate survey sample weighted prevalence
+if (!require(sjPlot)) install.packages("sjPlot")
+library(sjPlot)
+if (!require(stargazer)) install.packages("stargazer")
+library(stargazer)
+if (!require(kableExtra)) install.packages("kableExtra")
+library(kableExtra)
+if (!require(htmlTable)) install.packages("htmlTable")
+library(htmlTable)
+library(dplyr)
+```
+
+
+
+```{r load_data}
+
+# If you want the CSV choose this option
+#data <- read_csv("Data/SSB_master.csv")
+
+# For R data file
+  load("Data/SSB_master.RData")
+  data <- SSB_master
+
+```
+
+
+
+```{r survey_weights}
+
+#DMC - why is there no cluster design in the weights?
+#creating survey weight object
+  design <- svydesign(ids = ~1, 
+                      weights= ~final_weight,
+                      strata = ~ststr, 
+                      data=data)
+  options(survey.lonely.psu = "adjust") #setting for how to deal with a psu with a single observation
+  
+
+```
+
+
+
+
+
+```{r prepare_2X2}
+
+#setting up outcome in the correct format
+  data$sleep_01 <- fct_relevel(data$sleep_01,
+                         "<7 Hours of Sleep", "7+ Hours of Sleep")
+
+# Split exposure variable into 2 binary variables for soda and juice
+
+# SODA
+  # Create binary exposure variable - (0-1) vs 0 (reference category)
+  data$ssb_cat2_low <- as.numeric(data$ssb_cat2)
+  table(data$ssb_cat2_low)
+  
+  data$ssb_cat2_low[data$ssb_cat2_low==3] <- NA
+  
+  data$ssb_cat2_low <- factor(data$ssb_cat2_low,
+                                levels=c(2,1),
+                                labels=c("(0-1) SSB per Day", "0 SSB per Day"))
+  
+  # Create binary exposure variable - (1+) vs 0 (reference category)
+  data$ssb_cat2_high <- as.numeric(data$ssb_cat2)
+  table(data$ssb_cat2_high)
+  
+  data$ssb_cat2_high[data$ssb_cat2_high==2] <- NA
+  
+  data$ssb_cat2_high <- factor(data$ssb_cat2_high,
+                                  levels=c(3,1),
+                                  labels=c("1+ SSB per Day", "0 SSB per Day"))
+
+  
+# JUICE
+  # Create binary exposure variable - (0-1) vs 0 (reference category)
+  data$ssb_cat2_low <- as.numeric(data$ssb_cat2)
+  table(data$ssb_cat2_low)
+  
+  data$ssb_cat2_low[data$ssb_cat2_low==3] <- NA
+  
+  data$ssb_cat2_low <- factor(data$ssb_cat2_low,
+                                levels=c(2,1),
+                                labels=c("(0-1) SSB per Day", "0 SSB per Day"))
+  
+  # Create binary exposure variable - (1+) vs 0 (reference category)
+  data$ssb_cat2_high <- as.numeric(data$ssb_cat2)
+  table(data$ssb_cat2_high)
+  
+  data$ssb_cat2_high[data$ssb_cat2_high==2] <- NA
+  
+  data$ssb_cat2_high <- factor(data$ssb_cat2_high,
+                                  levels=c(3,1),
+                                  labels=c("1+ SSB per Day", "0 SSB per Day"))
+  
+  
+  
+  
+  
+  
+  #Check newly coded variables
+    with(data, table(ssb_cat2_low, ssb_cat2))
+    with(data, table(ssb_cat2_high, ssb_cat2))
+  #SSB tables coded correctly
+    
+
+  #Checking sleep X ssb tables
+    base_table_low <- with(data, table(ssb_cat2_low, sleep_01))
+    base_table_low
+    base_table_high <- with(data, table(ssb_cat2_high, sleep_01))
+    base_table_high
+  #Tables set up correctly
+
+
+  # Change factor covariates into numeric
+    data$age_cat <- as.numeric(data$age_cat)
+    data$sex_01 <- as.numeric(data$sex_01)
+    data$education <- as.numeric(data$education)
+    data$exercise_01 <- as.numeric(data$exercise_01)
+    data$mental <- as.numeric(data$mental)
+    data$diabetes_01 <- as.numeric(data$diabetes_01)
+    data$smoking_01 <- as.numeric(data$smoking_01)
+    data$bmi_cat <- as.numeric(data$bmi_cat)
+
+
+  # Setting up covariates into tables
+    adj_table_low <- with(data, table(ssb_cat2_low, sleep_01,
+                          age_cat+sex_01+education+exercise_01+mental+diabetes_01+smoking_01+bmi_cat))
+    
+    adj_table_high <- with(data, table(ssb_cat2_high, sleep_01, 
+                          age_cat+sex_01+education+exercise_01+mental+diabetes_01+smoking_01+bmi_cat))
+    
+    adj_table_low <- with(data, table(ssb_cat2_low, sleep_01, 
+                          age_cat+sex_01+exercise_01+diabetes_01+smoking_01+bmi_cat))
+  #adding mental and BMI changes the crude PR - why is this?
+
+
+```
+
+
+
+
+
+```{r M-H_analysis}
+
+  #unadjusted low PR
+    (low_base <- epi.2by2(base_table_low, method="cross.sectional"))
+  
+  #unadjusted high PR
+    (high_base <- epi.2by2(base_table_high, method="cross.sectional"))
+  
+  #adjusted low PR
+    (low_adj <- epi.2by2(adj_table_low, method="cross.sectional"))
+  
+  #adjusted high PR
+    (high_adj <- epi.2by2(adj_table_high, method="cross.sectional"))
+
+
+```
+
+
+
+
+
+
+
+
