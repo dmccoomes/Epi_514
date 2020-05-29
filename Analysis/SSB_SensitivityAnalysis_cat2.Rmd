@@ -167,10 +167,12 @@ Variables:
     (low_adj <- epi.2by2(adj_table_low, method="cross.sectional"))
   
   #adjusted high PR
-    high_adj <- epi.2by2(adj_table_high, method="cross.sectional")
+    (high_adj <- epi.2by2(adj_table_high, method="cross.sectional"))
 
 
 ```
+
+
 
 
 ```{r stratified_mh}
@@ -194,17 +196,17 @@ Variables:
 # 
 
 # Set up tables - two for each education level and remove education from covariate list
-  no_hs_table_low <- with(no_hs, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
-  no_hs_table_high <- with(no_hs, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+  no_hs_table_low <- with(no_hs, table(ssb_cat2_low, sleep_01, age_cat+sex_01+exercise_01))
+  no_hs_table_high <- with(no_hs, table(ssb_cat2_high, sleep_01, age_cat+sex_01+exercise_01))
   
-  hs_table_low <- with(hs, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
-  hs_table_high <- with(hs, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+  hs_table_low <- with(hs, table(ssb_cat2_low, sleep_01, age_cat+sex_01+exercise_01))
+  hs_table_high <- with(hs, table(ssb_cat2_high, sleep_01, age_cat+sex_01+exercise_01))
   
-  some_coll_table_low <- with(some_coll, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
-  some_coll_table_high <- with(some_coll, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+  some_coll_table_low <- with(some_coll, table(ssb_cat2_low, sleep_01, age_cat+sex_01+exercise_01))
+  some_coll_table_high <- with(some_coll, table(ssb_cat2_high, sleep_01, age_cat+sex_01+exercise_01))
   
-  coll_table_low <- with(coll, table(ssb_cat1_low, sleep_01, age_cat+sex_01+exercise_01))
-  coll_table_high <- with(coll, table(ssb_cat1_high, sleep_01, age_cat+sex_01+exercise_01))
+  coll_table_low <- with(coll, table(ssb_cat2_low, sleep_01, age_cat+sex_01+exercise_01))
+  coll_table_high <- with(coll, table(ssb_cat2_high, sleep_01, age_cat+sex_01+exercise_01))
   
 
 ```
@@ -214,17 +216,17 @@ Variables:
 ```{r M-H_analysis_education}
 
   
-  low_no_hs <- epi.2by2(no_hs_table_low, method="cross.sectional")
-  high_no_hs <- epi.2by2(no_hs_table_high, method="cross.sectional")
+  (low_no_hs <- epi.2by2(no_hs_table_low, method="cross.sectional"))
+  (high_no_hs <- epi.2by2(no_hs_table_high, method="cross.sectional"))
   
-  low_hs <- epi.2by2(hs_table_low, method="cross.sectional")
-  high_hs <- epi.2by2(hs_table_high, method="cross.sectional")
+  (low_hs <- epi.2by2(hs_table_low, method="cross.sectional"))
+  (high_hs <- epi.2by2(hs_table_high, method="cross.sectional"))
   
-  low_some_coll <- epi.2by2(some_coll_table_low, method="cross.sectional")
-  high_some_coll <- epi.2by2(some_coll_table_high, method="cross.sectional")
+  (low_some_coll <- epi.2by2(some_coll_table_low, method="cross.sectional"))
+  (high_some_coll <- epi.2by2(some_coll_table_high, method="cross.sectional"))
   
-  low_coll <- epi.2by2(coll_table_low, method="cross.sectional")
-  high_coll <- epi.2by2(coll_table_high, method="cross.sectional")
+  (low_coll <- epi.2by2(coll_table_low, method="cross.sectional"))
+  (high_coll <- epi.2by2(coll_table_high, method="cross.sectional"))
 
 
 ```
