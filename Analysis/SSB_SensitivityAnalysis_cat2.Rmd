@@ -236,33 +236,33 @@ Variables:
 ```{r stratify_age}
 
 #setting up education stratified variables
-#subsetting data
-age_18_24 <- subset(data, data$age==1)
-age_25_34 <- subset(data, data$age==2)
-age_35_44 <- subset(data, data$age==3)
-age_45_54 <- subset(data, data$age==4)
-age_55_64 <- subset(data, data$age==5)
-age_65 <- subset(data, data$age==6)
-
-
-#setting up tables - two for each education level and remove education from covariate list
-age_18_24_low <- with(age_18_24, table(ssb_cat1_low, sleep_01, sex_01+education+exercise_01))
-age_18_24_high <- with(age_18_24, table(ssb_cat1_high, sleep_01, sex_01+education+exercise_01))
-
-age_25_34_low <- with(age_25_34, table(ssb_cat1_low, sleep_01, sex_01+education+exercise_01))
-age_25_34_high <- with(age_25_34, table(ssb_cat1_high, sleep_01, sex_01+education+exercise_01))
-
-age_35_44_low <- with(age_35_44, table(ssb_cat1_low, sleep_01, sex_01+education+exercise_01))
-age_35_44_high <- with(age_35_44, table(ssb_cat1_high, sleep_01, sex_01+education+exercise_01))
-
-age_45_54_low <- with(age_45_54, table(ssb_cat1_low, sleep_01, sex_01+education+exercise_01))
-age_45_54_high <- with(age_45_54, table(ssb_cat1_high, sleep_01, sex_01+education+exercise_01))
-
-age_55_64_low <- with(age_55_64, table(ssb_cat1_low, sleep_01, sex_01+education+exercise_01))
-age_55_64_high <- with(age_55_64, table(ssb_cat1_high, sleep_01, sex_01+education+exercise_01))
-
-age_65_low <- with(age_65, table(ssb_cat1_low, sleep_01, sex_01+education+exercise_01))
-age_65_high <- with(age_65, table(ssb_cat1_high, sleep_01, sex_01+education+exercise_01))
+  #subsetting data
+    age_18_24 <- subset(data, data$age==1)
+    age_25_34 <- subset(data, data$age==2)
+    age_35_44 <- subset(data, data$age==3)
+    age_45_54 <- subset(data, data$age==4)
+    age_55_64 <- subset(data, data$age==5)
+    age_65 <- subset(data, data$age==6)
+  
+  
+  #setting up tables - two for each education level and remove education from covariate list
+    age_18_24_low <- with(age_18_24, table(ssb_cat2_low, sleep_01, sex_01+education+exercise_01))
+    age_18_24_high <- with(age_18_24, table(ssb_cat2_high, sleep_01, sex_01+education+exercise_01))
+    
+    age_25_34_low <- with(age_25_34, table(ssb_cat2_low, sleep_01, sex_01+education+exercise_01))
+    age_25_34_high <- with(age_25_34, table(ssb_cat2_high, sleep_01, sex_01+education+exercise_01))
+    
+    age_35_44_low <- with(age_35_44, table(ssb_cat2_low, sleep_01, sex_01+education+exercise_01))
+    age_35_44_high <- with(age_35_44, table(ssb_cat2_high, sleep_01, sex_01+education+exercise_01))
+    
+    age_45_54_low <- with(age_45_54, table(ssb_cat2_low, sleep_01, sex_01+education+exercise_01))
+    age_45_54_high <- with(age_45_54, table(ssb_cat2_high, sleep_01, sex_01+education+exercise_01))
+    
+    age_55_64_low <- with(age_55_64, table(ssb_cat2_low, sleep_01, sex_01+education+exercise_01))
+    age_55_64_high <- with(age_55_64, table(ssb_cat2_high, sleep_01, sex_01+education+exercise_01))
+    
+    age_65_low <- with(age_65, table(ssb_cat2_low, sleep_01, sex_01+education+exercise_01))
+    age_65_high <- with(age_65, table(ssb_cat2_high, sleep_01, sex_01+education+exercise_01))
 
 ```
 
@@ -271,23 +271,23 @@ age_65_high <- with(age_65, table(ssb_cat1_high, sleep_01, sex_01+education+exer
 ```{r M-H_analysis_age}
 
 
-low_age_18_24 <- epi.2by2(age_18_24_low, method="cross.sectional")
-high_age_18_24 <- epi.2by2(age_18_24_high, method="cross.sectional")
-
-low_age_25_34 <- epi.2by2(age_25_34_low, method="cross.sectional")
-high_age_25_34 <- epi.2by2(age_25_34_high, method="cross.sectional")
-
-low_age_35_44 <- epi.2by2(age_35_44_low, method="cross.sectional")
-high_age_35_44 <- epi.2by2(age_35_44_high, method="cross.sectional")
-
-low_age_45_54 <- epi.2by2(age_45_54_low, method="cross.sectional")
-high_age_45_54 <- epi.2by2(age_45_54_high, method="cross.sectional")
-
-low_age_55_64 <- epi.2by2(age_55_64_low, method="cross.sectional")
-high_age_55_64 <- epi.2by2(age_55_64_high, method="cross.sectional")
-
-low_age_65 <- epi.2by2(age_65_low, method="cross.sectional")
-high_age_65 <- epi.2by2(age_65_high, method="cross.sectional")
+  (low_age_18_24 <- epi.2by2(age_18_24_low, method="cross.sectional"))
+  (high_age_18_24 <- epi.2by2(age_18_24_high, method="cross.sectional"))
+  
+  (low_age_25_34 <- epi.2by2(age_25_34_low, method="cross.sectional"))
+  (high_age_25_34 <- epi.2by2(age_25_34_high, method="cross.sectional"))
+  
+  (low_age_35_44 <- epi.2by2(age_35_44_low, method="cross.sectional"))
+  (high_age_35_44 <- epi.2by2(age_35_44_high, method="cross.sectional"))
+  
+  (low_age_45_54 <- epi.2by2(age_45_54_low, method="cross.sectional"))
+  (high_age_45_54 <- epi.2by2(age_45_54_high, method="cross.sectional"))
+  
+  (low_age_55_64 <- epi.2by2(age_55_64_low, method="cross.sectional"))
+  (high_age_55_64 <- epi.2by2(age_55_64_high, method="cross.sectional"))
+  
+  (low_age_65 <- epi.2by2(age_65_low, method="cross.sectional"))
+  (high_age_65 <- epi.2by2(age_65_high, method="cross.sectional"))
 
 
 ```
