@@ -58,6 +58,7 @@ library(dplyr)
 
 
 
+
 ```{r survey_weights}
 
 #DMC - why is there no cluster design in the weights?
@@ -75,73 +76,110 @@ library(dplyr)
 
 
 
+```{r}
+
+# create categorical soda variable 1
+ data$soda_cat1 <- data$soda
+      data <- data %>% mutate(soda_cat1 = case_when(soda<1 ~ 0,
+                                                    soda>=1 & soda<2 ~ 1,
+                                                    soda>=2 ~ 2))
+    
+      data$soda_cat1 <- factor(data$soda_cat1,
+                           levels = c(0, 1, 2),
+                           labels = c("<1 sodas per Day", "[1-2) sodas per Day", 
+                                      "2+ sodas per Day"))
+      
+
+# create categorical juice variable 1
+ data$juice_cat1 <- data$juice
+      data <- data %>% mutate(juice_cat1 = case_when(juice<1 ~ 0,
+                                                    juice>=1 & juice<2 ~ 1,
+                                                    juice>=2 ~ 2))
+    
+      data$juice_cat1 <- factor(data$juice_cat1,
+                           levels = c(0, 1, 2),
+                           labels = c("<1 juices per Day", "[1-2) juices per Day", 
+                                      "2+ juices per Day"))
+
+```
+
+
+
+
 ```{r prepare_2X2}
 
-#setting up outcome in the correct format
+# Relevel outcome as 1/2 format
   data$sleep_01 <- fct_relevel(data$sleep_01,
                          "<7 Hours of Sleep", "7+ Hours of Sleep")
 
 # Split exposure variable into 2 binary variables for soda and juice
 
 # SODA
-  # Create binary exposure variable - (0-1) vs 0 (reference category)
-  data$ssb_cat2_low <- as.numeric(data$ssb_cat2)
-  table(data$ssb_cat2_low)
+  # Create binary exposure variable - [1-2) vs <1 (reference category)
+  data$soda_cat1_low <- as.numeric(data$soda_cat1)
+  table(data$ssb_cat1_low)
   
-  data$ssb_cat2_low[data$ssb_cat2_low==3] <- NA
+  data$soda_cat1_low[data$soda_cat1_low==3] <- NA
   
-  data$ssb_cat2_low <- factor(data$ssb_cat2_low,
+  data$soda_cat1_low <- factor(data$soda_cat1_low,
                                 levels=c(2,1),
-                                labels=c("(0-1) SSB per Day", "0 SSB per Day"))
+                                labels=c("[1-2) Sodas per Day", "<1 Sodas per Day"))
   
-  # Create binary exposure variable - (1+) vs 0 (reference category)
-  data$ssb_cat2_high <- as.numeric(data$ssb_cat2)
-  table(data$ssb_cat2_high)
+  # Create binary exposure variable - 2+ vs <1 (reference category)
+  data$soda_cat1_high <- as.numeric(data$soda_cat1)
+  table(data$soda_cat1_high)
   
-  data$ssb_cat2_high[data$ssb_cat2_high==2] <- NA
+  data$soda_cat1_high[data$soda_cat1_high==2] <- NA
   
-  data$ssb_cat2_high <- factor(data$ssb_cat2_high,
+  data$soda_cat1_high <- factor(data$soda_cat1_high,
                                   levels=c(3,1),
-                                  labels=c("1+ SSB per Day", "0 SSB per Day"))
+                                  labels=c("2+ Sodas per Day", "<1 Sodas per Day"))
 
   
-# JUICE
-  # Create binary exposure variable - (0-1) vs 0 (reference category)
-  data$ssb_cat2_low <- as.numeric(data$ssb_cat2)
-  table(data$ssb_cat2_low)
+# OTHER SSBs
+  # Create binary exposure variable - [1-2) vs <1 (reference category)
+  data$juice_cat1_low <- as.numeric(data$juice_cat1)
+  table(data$juice_cat1_low)
   
-  data$ssb_cat2_low[data$ssb_cat2_low==3] <- NA
+  data$juice_cat1_low[data$juice_cat1_low==3] <- NA
   
-  data$ssb_cat2_low <- factor(data$ssb_cat2_low,
+  data$juice_cat1_low <- factor(data$juice_cat1_low,
                                 levels=c(2,1),
-                                labels=c("(0-1) SSB per Day", "0 SSB per Day"))
+                                labels=c("[1-2) Other SSBs per Day", "<1 Other SSBs per Day"))
   
-  # Create binary exposure variable - (1+) vs 0 (reference category)
-  data$ssb_cat2_high <- as.numeric(data$ssb_cat2)
-  table(data$ssb_cat2_high)
+  # Create binary exposure variable - 2+ vs <1 (reference category)
+  data$juice_cat1_high <- as.numeric(data$juice_cat1)
+  table(data$juice_cat1_high)
   
-  data$ssb_cat2_high[data$ssb_cat2_high==2] <- NA
+  data$juice_cat1_high[data$juice_cat1_high==2] <- NA
   
-  data$ssb_cat2_high <- factor(data$ssb_cat2_high,
+  data$juice_cat1_high <- factor(data$juice_cat1_high,
                                   levels=c(3,1),
-                                  labels=c("1+ SSB per Day", "0 SSB per Day"))
-  
-  
-  
-  
+                                  labels=c("2+ Other SSBs per Day", "<1 Other SSBs per Day"))
   
   
   #Check newly coded variables
-    with(data, table(ssb_cat2_low, ssb_cat2))
-    with(data, table(ssb_cat2_high, ssb_cat2))
+    # Soda
+    with(data, table(soda_cat1_low, soda_cat1))
+    with(data, table(soda_cat1_high, soda_cat1))
+    
+    # Other SSBs
+    with(data, table(juice_cat1_low, juice_cat1))
+    with(data, table(juice_cat1_high, juice_cat1))
+    
   #SSB tables coded correctly
+    
     
 
   #Checking sleep X ssb tables
-    base_table_low <- with(data, table(ssb_cat2_low, sleep_01))
-    base_table_low
-    base_table_high <- with(data, table(ssb_cat2_high, sleep_01))
-    base_table_high
+    # Soda
+    (base_table_soda_low <- with(data, table(soda_cat1_low, sleep_01)))
+    (base_table_soda_high <- with(data, table(soda_cat1_high, sleep_01)))
+    
+    # Juice
+    (base_table_juice_low <- with(data, table(juice_cat1_low, sleep_01)))
+    (base_table_juice_high <- with(data, table(juice_cat1_high, sleep_01)))
+    
   #Tables set up correctly
 
 
@@ -157,14 +195,26 @@ library(dplyr)
 
 
   # Setting up covariates into tables
-    adj_table_low <- with(data, table(ssb_cat2_low, sleep_01,
+    # Soda
+    adj_table_soda_low <- with(data, table(soda_cat1_low, sleep_01,
                           age_cat+sex_01+education+exercise_01+mental+diabetes_01+smoking_01+bmi_cat))
     
-    adj_table_high <- with(data, table(ssb_cat2_high, sleep_01, 
+    adj_table_soda_high <- with(data, table(soda_cat1_high, sleep_01, 
                           age_cat+sex_01+education+exercise_01+mental+diabetes_01+smoking_01+bmi_cat))
     
-    adj_table_low <- with(data, table(ssb_cat2_low, sleep_01, 
+    adj_table_soda_low <- with(data, table(soda_cat1_low, sleep_01, 
                           age_cat+sex_01+exercise_01+diabetes_01+smoking_01+bmi_cat))
+    
+    # Other SSB
+    adj_table_juice_low <- with(data, table(juice_cat1_low, sleep_01,
+                          age_cat+sex_01+education+exercise_01+mental+diabetes_01+smoking_01+bmi_cat))
+    
+    adj_table_juice_high <- with(data, table(juice_cat1_high, sleep_01, 
+                          age_cat+sex_01+education+exercise_01+mental+diabetes_01+smoking_01+bmi_cat))
+    
+    adj_table_juice_low <- with(data, table(juice_cat1_low, sleep_01, 
+                          age_cat+sex_01+exercise_01+diabetes_01+smoking_01+bmi_cat))
+    
   #adding mental and BMI changes the crude PR - why is this?
 
 
@@ -175,19 +225,33 @@ library(dplyr)
 
 
 ```{r M-H_analysis}
-
+# SODA
   #unadjusted low PR
-    (low_base <- epi.2by2(base_table_low, method="cross.sectional"))
+    (low_base_soda <- epi.2by2(base_table_soda_low, method="cross.sectional"))
   
   #unadjusted high PR
-    (high_base <- epi.2by2(base_table_high, method="cross.sectional"))
+    (high_base_soda <- epi.2by2(base_table_soda_high, method="cross.sectional"))
   
   #adjusted low PR
-    (low_adj <- epi.2by2(adj_table_low, method="cross.sectional"))
+    (low_adj_soda <- epi.2by2(adj_table_soda_low, method="cross.sectional"))
+    ## ERROR
   
   #adjusted high PR
-    (high_adj <- epi.2by2(adj_table_high, method="cross.sectional"))
+    (high_adj_soda <- epi.2by2(adj_table_soda_high, method="cross.sectional"))
 
+
+# OTHER SSBs
+  #unadjusted low PR
+    (low_base_juice <- epi.2by2(base_table_juice_low, method="cross.sectional"))
+  
+  #unadjusted high PR
+    (high_base_juice <- epi.2by2(base_table_juice_high, method="cross.sectional"))
+  
+  #adjusted low PR
+    (low_adj_juice <- epi.2by2(adj_table_juice_low, method="cross.sectional"))
+  
+  #adjusted high PR
+    (high_adj_juice <- epi.2by2(adj_table_juice_high, method="cross.sectional"))
 
 ```
 
