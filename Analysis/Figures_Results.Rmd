@@ -1,0 +1,135 @@
+---
+title: "Figures_Results"
+author: "John Schoof"
+date: "5/30/2020"
+output: html_document
+---
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+  if (Sys.getenv("USER") == "david") {
+    knitr::opts_knit$set(root.dir = "/Users/david/Desktop/Dave/school/Epi 514/Final Project/Analysis/")
+  }
+  
+  #Matt's system
+  if (Sys.getenv("USER") == "msgoldberg") {
+    knitr::opts_knit$set(root.dir = "/Users/msgoldberg/Desktop/Grad_School/Year_1/Q3/EPI514/SSB_Paper/")
+  }
+
+  if (Sys.getenv("USER") == "jscho") {
+    knitr::opts_knit$set(root.dir = "C:/Users/jscho/OneDrive - UW/SPRING 2020-LAPTOP-7K6NFTGB/EPI 514/")
+  }
+
+
+```
+
+
+
+```{r load_packages}
+
+library(tidyverse) #suite of packages for data cleaning and manipulation
+library(epiR) #basic epi tools including stratified analysis with Mantel Haenszel
+library(survey) #survey package to calculate survey sample weighted prevalence
+if (!require(sjPlot)) install.packages("sjPlot")
+library(sjPlot)
+if (!require(stargazer)) install.packages("stargazer")
+library(stargazer)
+if (!require(kableExtra)) install.packages("kableExtra")
+library(kableExtra)
+if (!require(htmlTable)) install.packages("htmlTable")
+library(htmlTable)
+library(dplyr)
+library(ggplot2)
+```
+
+
+
+
+```{r create_data}
+
+# Create vectors of results
+  id <- c(1, 2, 3, 4, 5, 6)  
+  prev <- c("29.4%", "34.2", "41.0%", "29.4%", "34.2", "41.0%")
+  rr <- c(1, 1.16, 1.39, 1, 1.13, 1.33)
+  upper <- c(1, 1.20, 1.44, 1, 1.17, 1.37)
+  lower <- c(1, 1.12, 1.35, 1, 1.09, 1.29)
+  type <- c(0, 0, 0, 1, 1, 1)
+  consume <- c(0, 1, 2, 0, 1, 2)
+  
+  
+
+# Create dataframe of results
+  df <- data.frame(id, prev, rr, upper, lower, type, consume)
+  
+  #df$id <- factor(df$id, levels = df$id)
+  
+  df$type <- factor(df$type, 
+                   levels = c(0, 1), 
+                    labels = c("Crude", "Adjusted"))
+  
+  df$consume <- factor(df$consume, 
+                    levels = c(0, 1, 2), 
+                    labels = c("<1 SSB", "1-2 SSB", ">2 SSB"))
+
+
+
+```
+
+
+
+
+```{r bar_graph}
+
+
+
+barplot <-    df %>% 
+                ggplot(aes(y = rr, x = type, fill=consume)) +
+                  geom_col(position = "dodge") + 
+                  coord_flip() +
+                  ylim(0,2) +
+                  labs(x= "Average Daily SSB Consumtion (in beverages)",
+                       y= "Relative Risk",
+                       title= "Figure 1. Relative Risks") + 
+                  theme_classic() # no background
+print(barplot)
+
+
+
+```
+
+
+
+```{r forest_plot}
+
+
+forest <- ggplot(data=df, aes(x=consume, y=rr, ymin=lower, ymax=upper)) +
+            geom_pointrange() + 
+            geom_hline(yintercept=1, lty=2) +  # add a dotted line at x=1 after flip
+            coord_flip() +  # flip coordinates (puts labels on y axis)
+            xlab("Average Daily SSB Consumtion") + ylab("Relative Risk (95% CI)") +
+            ylim(0,2) +
+            theme_classic()  # use a white background
+print(forest)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
