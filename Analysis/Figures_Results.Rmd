@@ -28,6 +28,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 
+
 ```{r load_packages}
 
 library(tidyverse) #suite of packages for data cleaning and manipulation
@@ -100,6 +101,7 @@ print(barplot)
 
 
 ```
+
 
 
 ```{r}
