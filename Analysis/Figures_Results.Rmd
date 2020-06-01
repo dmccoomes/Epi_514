@@ -152,7 +152,7 @@ forest <- ggplot(df, aes(x=consumption, y=rr, ymin=lower, ymax=upper)) +
               labs(x= "Average Daily SSB Consumtion (in beverages)",
                          y= "Relative Risk",
                          title= "Figure 1. Relative Risks") +
-              ylim(0.25, 1.75) +
+              ylim(0.5, 1.5) +
               theme_classic()  # use a white background
 
 print(forest)
@@ -184,7 +184,7 @@ p=ggplot(dat, aes(y=cite, x=yi, xmin=lowerci, xmax=upperci, shape = tester))+
   geom_vline(xintercept=0, color='black', linetype='dashed')+
   #Create sub-plots (i.e., facets) based on levels of setting
   #And allow them to have their own unique axes (so authors don't redundantly repeat)
-  facet_grid(setting~., scales= 'free', space='free')
+  facet_grid(adjusted~., scales= 'free', space='free')
 
 
 ```
