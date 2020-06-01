@@ -82,6 +82,58 @@ library(ggplot2)
 
 
 
+```{r}
+
+
+## base plot
+ ggplot(data = df, aes(x = consumption, y = rr)) +
+   
+   ## change the theme
+   # apply basic black and white theme - this theme removes the background colour by default
+     theme_bw() + 
+     # remove gridlines. panel.grid.major is for verical lines, panel.grid.minor is for horizontal lines
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+       # remove borders
+       panel.border = element_blank(),
+       # removing borders also removes x and y axes. Add them back
+       axis.line = element_line()) + 
+   
+   ## add bars
+   geom_bar(stat = "identity", aes(fill = adjusted), position = "dodge") + 
+     scale_fill_manual(values = c("#F4BE85", "#F1CE75", "#B2D1E8")) + 
+   
+   ## make the plot horizontal
+   coord_flip() + 
+   
+   ## add facets 
+   facet_grid(rows = vars(adjusted), scales = "free_y", space = "free_y", switch = "y") + 
+    # move facet label outside the chart area i.e. continent names should be to the left of country names
+   theme(strip.placement = "outside",
+         # remove background colour from facet labels
+         strip.background  = element_blank(),
+         # remove border from facet label
+        panel.border = element_blank(), 
+        # make continent names horizontal
+        strip.text.y = element_text(angle = 180)) + 
+ 
+   ## remove legend
+   guides(fill = FALSE) + 
+   
+   ## modify graph labels
+   # remove x-axis label
+   xlab("") +
+   # change the y-axis label
+   ylab("Relative Risk") + 
+   # add caption and title
+   labs(title = "Life expectancy in select countries in 1952 and 2007", 
+caption = "Data source: Gapminder")
+
+
+
+```
+
+
+
 
 ```{r bar_graph}
 
