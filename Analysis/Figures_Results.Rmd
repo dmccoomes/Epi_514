@@ -52,29 +52,28 @@ library(ggplot2)
 ```{r create_data}
 
 # Create vectors of results
-  id <- c(1, 2, 3, 4, 5, 6)  
-  prev <- c("29.4%", "34.2", "41.0%", "29.4%", "34.2", "41.0%")
-  rr <- c(1, 1.16, 1.39, 1, 1.13, 1.33)
-  upper <- c(1, 1.20, 1.44, 1, 1.17, 1.37)
-  lower <- c(1, 1.12, 1.35, 1, 1.09, 1.29)
-  adjusted <- c(0, 0, 0, 1, 1, 1)
-  consumption <- c(0, 1, 2, 0, 1, 2)
-  rr_string <- c("Ref", "1.16 (1.12, 1.20)", "1.39 (1.35, 1.44)", "Ref", "1.13 (1.09, 1.17)", "1.33 (1.29, 1.37)")
+  id <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)  
+  #prev <- c("29.4%", "34.2", "41.0%")
+  rr <- c(1.13, 1.33, 0.98, 1.19, 1.14, 1.31, 1.12, 1.31, 1.11, 1.30)
+  upper <- c(1.17, 1.37, 1.11, 1.32, 1.21, 1.38, 1.20, 1.39, 1.19, 1.40)
+  lower <- c(1.09, 1.29, 0.87, 1.07, 1.07, 1.24, 1.05, 1.24, 1.03, 1.21)
+  adjusted <- c("Adjusted", "Adjusted", "No HS", "No HS", "HS Graduate", "HS Graduate", "Some College", "Some College", "College Graduate", "College Graduate")
+  consumption <- c(1, 2, 1, 2, 1, 2, 1, 2, 1, 2)
+  #rr_string <- c("Ref", "1.13 (1.09, 1.17)", "1.33 (1.29, 1.37)")
   
   
 
 # Create dataframe of results
-  df <- data.frame(id, prev, rr, upper, lower, adjusted, consumption, rr_string)
+  df <- data.frame(id, rr, upper, lower, adjusted, consumption)
   
   #df$id <- factor(df$id, levels = df$id)
   
   df$adjusted <- factor(df$adjusted, 
-                   levels = c(0, 1), 
-                    labels = c("Crude", "Adjusted"))
+                    levels = c("Adjusted", "No HS", "HS Graduate", "Some College", "College Graduate"))
   
   df$consumption <- factor(df$consumption, 
-                    levels = c(0, 1, 2), 
-                    labels = c("<1 SSB (Ref)", "1-2 SSB", ">2 SSB"))
+                    levels = c(1, 2), 
+                    labels = c("1-2 SSB", ">2 SSB"))
 
 
 
@@ -100,7 +99,7 @@ library(ggplot2)
    
    ## add bars
    geom_bar(stat = "identity", aes(fill = adjusted), position = "dodge") + 
-     scale_fill_manual(values = c("#999999", "#CCCCCC")) + 
+     #scale_fill_manual(values = c("#999999", "#CCCCCC")) + 
    
    ## make the plot horizontal
    coord_flip() + 
@@ -144,79 +143,56 @@ ggsave("figure2_results.png")
 
 
 
-```{r bar_graph}
-
-
-
-barplot <-    ggplot(df, aes(y = rr, x = consumption, fill = adjusted)) +
-                  geom_col(position = "dodge") + 
-                  coord_flip() +
-                  ylim(0, 1.75) +
-                  labs(x= "Average Daily SSB Consumtion (in beverages)",
-                       y= "Relative Risk",
-                       title= "Figure 1. Relative Risks") + 
-                  theme_classic() # no background
-
-print(barplot)
-
-
-
-```
-
-
-
-```{r}
-
-
-barplot <-    ggplot(df, aes(y = rr, x = adjusted, fill = consumption)) +
-                  geom_col(position = "dodge") + 
-                  coord_flip() +
-                  ylim(0, 1.75) +
-                  labs(x= "Average Daily SSB Consumtion (in beverages)",
-                       y= "Relative Risk",
-                       title= "Figure 1. Relative Risks") + 
-                  theme_classic() # no background
-
-                  # geom_text(aes(y = rr,label = rr_string, hjust=consumption)) +
-
-print(barplot)
-
-```
-
-
-
-```{r}
-
-barplot <-    ggplot(df, aes(y = rr, x = adjusted, fill = consumption)) +
-                  geom_col(position = "dodge") + 
-                  ylim(0, 1.75) +
-                  labs(x= "Average Daily SSB Consumtion (in beverages)",
-                       y= "Relative Risk",
-                       title= "Figure 1. Relative Risks") + 
-                  theme_classic() # no background
-
-print(barplot)
-
-
-```
-
-
-
 
 ```{r forest_plot}
 
 
 forest <- ggplot(df, aes(x=consumption, y=rr, ymin=lower, ymax=upper)) +
-              geom_pointrange() + 
+              
+
+              geom_pointrange(stat = "identity", aes(fill = adjusted), position = "dodge") + 
               geom_hline(yintercept=1, lty=2) +  # add a dotted line at x=1 after flip
               coord_flip() +  # flip coordinates (puts labels on y axis)
+  
+              ## add facets
+              facet_grid(rows = vars(adjusted), scales = "free_y", space = "free_y", switch = "y") + 
+              # move facet label outside the chart area i.e. continent names should be to the left of country names
+              theme(strip.placement = "outside",
+              # remove background colour from facet labels
+              strip.background  = element_blank(),
+              # remove border from facet label
+              panel.border = element_blank(), 
+              # make continent names horizontal
+              strip.text.y = element_text(angle = 180)) + 
+ 
+              ## remove legend
+              guides(fill = FALSE) + 
+              
               labs(x= "Average Daily SSB Consumtion (in beverages)",
                          y= "Relative Risk",
                          title= "Figure 1. Relative Risks") +
-              ylim(0.5, 1.5) +
+              ylim(0.75, 1.5) +
               theme_classic()  # use a white background
 
 print(forest)
+
+
+```
+
+
+
+```{r}
+
+fp <- df %>%
+  as_tibble() %>%
+  ggplot(aes(y=consumption, x=rr, label=consumption)) +
+    geom_point(size=4, shape=19) +
+    geom_errorbarh(aes(xmin=lower, xmax=upper), height=.3) +
+    coord_fixed(ratio=.3) +
+    geom_vline(xintercept=1, linetype='longdash') +
+    facet_wrap(~adjusted, ncol=1)
+
+print(fp)
 
 
 ```
