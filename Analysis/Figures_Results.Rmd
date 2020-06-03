@@ -150,7 +150,8 @@ ggsave("figure2_results.png")
 forest <- ggplot(df, aes(x=consumption, y=rr, ymin=lower, ymax=upper)) +
               
 
-              geom_pointrange(stat = "identity", aes(fill = adjusted), position = "dodge") + 
+              geom_point(stat = "identity", aes(fill = adjusted), position = "dodge") + 
+              geom_errorbar(aes(min=lower, max=upper, width = .3)) +
               geom_hline(yintercept=1, lty=2) +  # add a dotted line at x=1 after flip
               coord_flip() +  # flip coordinates (puts labels on y axis)
   
@@ -186,11 +187,14 @@ print(forest)
 fp <- df %>%
   as_tibble() %>%
   ggplot(aes(y=consumption, x=rr, label=consumption)) +
-    geom_point(size=4, shape=19) +
+    geom_point(size=3, shape=19) +
     geom_errorbarh(aes(xmin=lower, xmax=upper), height=.3) +
-    coord_fixed(ratio=.05) +
+    coord_fixed(ratio=.03) +
     geom_vline(xintercept=1, linetype='longdash') +
     facet_wrap(~adjusted, ncol=1) +
+    labs(x= "Average Daily SSB Consumtion (in beverages)",
+                         y= "Relative Risk",
+                         title= "Figure 1. Relative Risks") +
     theme_classic()  # use a white background
 
 print(fp)
