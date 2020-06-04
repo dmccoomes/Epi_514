@@ -187,11 +187,15 @@ print(forest)
 fp <- df %>%
   as_tibble() %>%
   ggplot(aes(y=consumption, x=rr, label=consumption)) +
-    geom_point(size=3, shape=19) +
+    geom_point(size=2, shape=19) +
     geom_errorbarh(aes(xmin=lower, xmax=upper), height=.3) +
     coord_fixed(ratio=.03) +
     geom_vline(xintercept=1, linetype='longdash') +
     facet_wrap(~adjusted, ncol=1) +
+    # remove background colour from facet labels
+    theme(strip.background  = element_blank(),
+    # remove border from facet label
+    panel.border = element_blank()) + 
     labs(x= "Average Daily SSB Consumtion (in beverages)",
                          y= "Relative Risk",
                          title= "Figure 1. Relative Risks") +
