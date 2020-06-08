@@ -184,6 +184,18 @@ Variables:
   some_coll <- subset(data, data$education==3)
   coll <- subset(data, data$education==4)
 
+  with(no_hs, table(ssb_cat2_high, sleep_01))
+  with(no_hs, table(ssb_cat2_low, sleep_01))
+  
+  with(hs, table(ssb_cat2_high, sleep_01))
+  with(hs, table(ssb_cat2_low, sleep_01))
+  
+  with(some_coll, table(ssb_cat2_high, sleep_01))
+  with(some_coll, table(ssb_cat2_low, sleep_01))
+  
+  with(coll, table(ssb_cat2_high, sleep_01))
+  with(coll, table(ssb_cat2_low, sleep_01))
+  
 # Not enough observations to fill each stratified table - need to combine some together
 # with(no_hs, table(ssb_cat1_high, sleep_01))
 # with(no_hs, table(ssb_cat1_high, sleep_01, age_cat))
