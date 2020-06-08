@@ -170,7 +170,7 @@ forest <- ggplot(df, aes(x=consumption, y=rr, ymin=lower, ymax=upper)) +
               guides(fill = FALSE) + 
               
               labs(x= "Average Daily SSB Consumtion (in beverages)",
-                         y= "Relative Risk of Shortened Sleep",
+                         y= "Mantel-Haenszel relative risks (RR) for the association between number of sugar-sweetened beverages (SSBs) consumed and sleep duration of <7 hours per day.",
                          title= "Figure 1. Relative Risks") +
               ylim(0.75, 1.5) +
               theme_classic()  # use a white background
@@ -192,18 +192,19 @@ fp <- df %>%
     geom_vline(xintercept=1, linetype='longdash') +
     facet_wrap(~adjusted, ncol=1) +
     # remove background colour from facet labels
-    theme(strip.background = element_blank(),
-          
-          axis.title.y = element_text(margin = margin(r = 10)),
-          axis.title.x = element_text(margin = margin(r = 10)),
+    theme(
+          axis.line = element_line(colour = "grey50", size = 1),
+          axis.title.y = element_text(margin = margin(r = 25)),
+          axis.title.x = element_text(margin = margin(t = 10)),
+          #plot.title.position = element_text(),
+          #plot.title = element_text(),
           # remove border from facet label
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           panel.background = element_blank())+
           #axis.line = element_line(colour = "grey50")) + 
     labs(y= "Average Daily SSB Consumtion (in beverages)",
-                         x= "Relative Risk of Shortened Sleep",
-                         title= "Figure 1. Relative Risks") 
+                x= "Relative Risk of Shortened Sleep (< 7 hours)") 
     #theme_classic()  # use a white background
 
 print(fp)
