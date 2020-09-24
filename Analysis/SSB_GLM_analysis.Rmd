@@ -111,7 +111,9 @@ Adjusted models fail to converge.  Errors in starting values.
   summary(mod.logbin)
 
 
+# Poisson Regression Model
   
+  mod.poisson <- glm(sleep_01 ~ ssb_cat1 + age_cat + education + mental + smoking_01, family= poisson(link=log), data=data)
   
   
 
