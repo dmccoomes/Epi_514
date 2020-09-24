@@ -1,0 +1,143 @@
+---
+title: "SSB_regression_23Sept2020"
+author: "John Schoof"
+date: "9/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+  if (Sys.getenv("USER") == "david") {
+    knitr::opts_knit$set(root.dir = "/Users/david/Desktop/Dave/school/Epi 514/Final Project/Analysis/")
+  }
+  
+  #Matt's system
+  if (Sys.getenv("USER") == "msgoldberg") {
+    knitr::opts_knit$set(root.dir = "/Users/msgoldberg/Desktop/Grad_School/Year_1/Q3/EPI514/SSB_Paper/")
+  }
+
+  if (Sys.getenv("USER") == "jscho") {
+    knitr::opts_knit$set(root.dir = "C:/Users/jscho/OneDrive - UW/SPRING 2020-LAPTOP-7K6NFTGB/EPI 514/")
+  }
+
+
+```
+
+
+
+
+```{r load packages, include=FALSE}
+
+library(tidyverse) #suite of packages for data cleaning and manipulation
+library(epiR) #basic epi tools including stratified analysis with Mantel Haenszel
+library(survey) #survey package to calculate survey sample weighted prevalence
+library(kableExtra)
+if (!require(sjPlot)) install.packages("sjPlot")
+if (!require(stargazer)) install.packages("stargazer")
+library(sjPlot)
+library(stargazer)
+library(htmlTable)
+if (!require(logbin)) install.packages("logbin")
+library(logbin)
+
+
+```
+
+
+
+
+```{r load data}
+
+# Load R data file
+  load("Data/SSB_master.RData")
+  data <- SSB_master
+  
+  glimpse(data)
+
+
+```
+
+
+```{r}
+
+# Do we need to create a survey weight object?
+
+  design <- svydesign(ids = ~1, weights= ~final_weight,
+                      strata = ~ststr, data=data)
+  options(survey.lonely.psu = "adjust") #setting for how to deal with a psu with a single observation
+
+```
+
+
+
+
+```{r unadjusted model}
+
+# Unadjusted Log-Binomial Regrerssion Model
+
+  mod.glm1 <- glm(sleep_01 ~ ssb_cat1, family= binomial(link=log), data=data)
+  summary(mod.glm1)
+  exp(coef(mod.glm1))
+  exp(confint(mod.glm1))
+  
+# Prevalences for medium and high consumers
+  0.2939262*1.1626084
+  0.2939262*1.3947922
+  
+  exp(confint(mod.glm))*.2939262
+  
+```
+
+The expected prevalence of short sleep given that someone is a low consumer is 29% (95% CI: 28.9-29.8).  The expected prevalence of short sleep given that someone ia a medium consumer is 34% (95% CI: 32.9-35.3).  The expected prevalence of short sleep given that someone is a high consumer is 41% (95% CI: 39.7-42.3). 
+
+Raw output is the difference in log risks.
+
+Adjusted models fail to converge.  Errors in starting values.
+
+
+```{r adjusted model}
+
+# Log-Binomial Regression Model adjusting for age, education, mental health, and smoking status
+
+  mod.logbin <- glm(sleep_01 ~ ssb_cat1 + age_cat + education + mental + smoking_01, family= binomial(link=log), data=data)
+
+  # Error: no valid set of coefficients has been found: please supply starting values
+
+
+
+  mod.logbin <- glm(sleep_01 ~ ssb_cat1 + age_cat + education + mental + smoking_01, data=data, family= binomial(link=log), start=c(log(mean(data$sleep_01)), 0), trace=TRUE, maxit = 100)
+                    
+  summary(mod.logbin)
+
+
+  
+  
+  
+
+  
+```
+
+
+```{r}
+# 
+
+  mod.logbin <- logbin(sleep_01 ~ ssb_cat1 + age_cat + education + mental + smoking_01, data=data, trace=1)
+
+  summary(mod.logbin)  
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
