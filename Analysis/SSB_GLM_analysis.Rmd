@@ -115,7 +115,11 @@ Adjusted models fail to converge.  Errors in starting values.
   
   mod.poisson <- glm(sleep_01 ~ ssb_cat1 + age_cat + education + mental + smoking_01, family= poisson(link=log), data=data)
   
-  
+  # Adjusting by each covariate individually
+(mod.logbin <- glm(sleep_01 ~ ssb_cat1 + age_cat, family= binomial(link=log), data=data))
+(mod.logbin <- glm(sleep_01 ~ ssb_cat1 + education, family= binomial(link=log), data=data))
+(mod.logbin <- glm(sleep_01 ~ ssb_cat1 + mental, family= binomial(link=log), data=data))
+(mod.logbin <- glm(sleep_01 ~ ssb_cat1 + smoking_01, family= binomial(link=log), data=data))
 
   
 ```
